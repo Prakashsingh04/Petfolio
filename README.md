@@ -1,4 +1,4 @@
-# Adopt-a-Pet
+# Petfolio
 
 A web portal that connects people who need to rehome a pet with people who want to adopt one.
 
@@ -12,28 +12,28 @@ An owner creates a listing with photos and details. Adopters browse the catalog,
 
 Read in this order.
 
-| Document | What's in it |
-|---|---|
-| [docs/PRD.md](docs/PRD.md) | Executive summary, problem statement, personas, feature list, numbered functional requirements, user flows, UX/design direction, email matrix |
-| [docs/DATABASE.md](docs/DATABASE.md) | ERD, table-by-table schema with DDL, enums, indexes, the accept transaction, migration and seed strategy |
-| [docs/API.md](docs/API.md) | All 41 REST endpoints with request/response shapes, error codes, pagination, auth cookie design, rate limits |
+| Document                                     | What's in it                                                                                                                                                                      |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [docs/PRD.md](docs/PRD.md)                   | Executive summary, problem statement, personas, feature list, numbered functional requirements, user flows, UX/design direction, email matrix                                     |
+| [docs/DATABASE.md](docs/DATABASE.md)         | ERD, table-by-table schema with DDL, enums, indexes, the accept transaction, migration and seed strategy                                                                          |
+| [docs/API.md](docs/API.md)                   | All 41 REST endpoints with request/response shapes, error codes, pagination, auth cookie design, rate limits                                                                      |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System diagram, stack tradeoff tables (FastAPI vs Django, Vercel vs Railway vs Render, Cloudinary vs S3, email providers), repo layout, auth flow, security checklist, deployment |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Ten build phases with deliverables, requirement coverage, and "done when" checklists |
+| [docs/ROADMAP.md](docs/ROADMAP.md)           | Ten build phases with deliverables, requirement coverage, and "done when" checklists                                                                                              |
 
 ---
 
 ## Stack
 
-| Layer | Choice |
-|---|---|
-| Frontend | Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS v4 |
-| Backend | FastAPI · Python 3.12 · Pydantic v2 |
-| ORM / Migrations | SQLAlchemy 2.0 · Alembic |
-| Database | PostgreSQL 16 |
-| Images | Cloudinary (signed direct-from-browser upload) |
-| Email | Resend |
-| Auth | Custom JWT in httpOnly cookies, Argon2id hashing |
-| Hosting | Vercel (frontend) · Render (API + Postgres) |
+| Layer            | Choice                                                            |
+| ---------------- | ----------------------------------------------------------------- |
+| Frontend         | Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS v4 |
+| Backend          | FastAPI · Python 3.12 · Pydantic v2                               |
+| ORM / Migrations | SQLAlchemy 2.0 · Alembic                                          |
+| Database         | PostgreSQL 16                                                     |
+| Images           | Cloudinary (signed direct-from-browser upload)                    |
+| Email            | Resend                                                            |
+| Auth             | Custom JWT in httpOnly cookies, Argon2id hashing                  |
+| Hosting          | Vercel (frontend) · Render (API + Postgres)                       |
 
 Reasoning for each choice is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
