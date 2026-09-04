@@ -1,4 +1,4 @@
-# API Design — Adopt-a-Pet
+# API Design — Petfolio
 
 **Framework:** FastAPI · **Base path:** `/api/v1` · **Format:** JSON
 **Interactive docs:** `/docs` (Swagger) and `/redoc`, auto-generated from Pydantic schemas
@@ -12,12 +12,12 @@
 
 Every endpoint table below has an **Auth** column:
 
-| Value | Meaning |
-|---|---|
-| `public` | No authentication required |
-| `user` | Valid access token required |
-| `verified` | Valid access token **and** `is_verified = true` |
-| `owner` | Authenticated **and** the caller owns the target resource |
+| Value      | Meaning                                                   |
+| ---------- | --------------------------------------------------------- |
+| `public`   | No authentication required                                |
+| `user`     | Valid access token required                               |
+| `verified` | Valid access token **and** `is_verified = true`           |
+| `owner`    | Authenticated **and** the caller owns the target resource |
 
 ### 1.2 Error envelope
 
@@ -50,42 +50,42 @@ Every 4xx and 5xx response uses the same shape:
 
 ### 1.3 Status codes
 
-| Code | Used for |
-|---|---|
-| `200` | Successful read or update |
-| `201` | Resource created |
-| `204` | Successful delete, no body |
-| `400` | Malformed request or invalid state transition |
-| `401` | Missing, expired, or invalid access token |
+| Code  | Used for                                                         |
+| ----- | ---------------------------------------------------------------- |
+| `200` | Successful read or update                                        |
+| `201` | Resource created                                                 |
+| `204` | Successful delete, no body                                       |
+| `400` | Malformed request or invalid state transition                    |
+| `401` | Missing, expired, or invalid access token                        |
 | `403` | Authenticated but not permitted (not the owner, or not verified) |
 | `404` | Resource does not exist, or the caller may not know that it does |
-| `409` | Conflict — duplicate email, duplicate application |
-| `422` | Pydantic validation failure |
-| `429` | Rate limit exceeded |
-| `500` | Unhandled server error |
+| `409` | Conflict — duplicate email, duplicate application                |
+| `422` | Pydantic validation failure                                      |
+| `429` | Rate limit exceeded                                              |
+| `500` | Unhandled server error                                           |
 
 ### 1.4 Error codes
 
-| Code | HTTP | Meaning |
-|---|---|---|
-| `VALIDATION_ERROR` | 422 | Field validation failed |
-| `INVALID_CREDENTIALS` | 401 | Wrong email or password |
-| `NOT_AUTHENTICATED` | 401 | No valid access token |
-| `TOKEN_EXPIRED` | 401 | Access token expired — client should refresh |
-| `REFRESH_INVALID` | 401 | Refresh token missing, expired, or revoked |
-| `EMAIL_ALREADY_REGISTERED` | 409 | Email is taken |
-| `EMAIL_NOT_VERIFIED` | 403 | Action requires a verified email |
-| `INVALID_TOKEN` | 400 | Verification or reset token is bad, expired, or used |
-| `NOT_OWNER` | 403 | Caller does not own this resource |
-| `PET_NOT_FOUND` | 404 | |
-| `PET_NOT_AVAILABLE` | 400 | Pet is already adopted |
-| `APPLICATION_NOT_FOUND` | 404 | |
-| `ALREADY_APPLIED` | 409 | One application per pet per adopter |
-| `CANNOT_APPLY_OWN_PET` | 400 | Owner cannot apply to their own listing |
-| `APPLICATION_ALREADY_DECIDED` | 400 | Only `pending` applications can be accepted or rejected |
-| `IMAGE_LIMIT_REACHED` | 400 | Maximum 8 images per pet |
-| `IMAGE_REQUIRED` | 400 | A listing must keep at least 1 image |
-| `RATE_LIMITED` | 429 | Too many requests |
+| Code                          | HTTP | Meaning                                                 |
+| ----------------------------- | ---- | ------------------------------------------------------- |
+| `VALIDATION_ERROR`            | 422  | Field validation failed                                 |
+| `INVALID_CREDENTIALS`         | 401  | Wrong email or password                                 |
+| `NOT_AUTHENTICATED`           | 401  | No valid access token                                   |
+| `TOKEN_EXPIRED`               | 401  | Access token expired — client should refresh            |
+| `REFRESH_INVALID`             | 401  | Refresh token missing, expired, or revoked              |
+| `EMAIL_ALREADY_REGISTERED`    | 409  | Email is taken                                          |
+| `EMAIL_NOT_VERIFIED`          | 403  | Action requires a verified email                        |
+| `INVALID_TOKEN`               | 400  | Verification or reset token is bad, expired, or used    |
+| `NOT_OWNER`                   | 403  | Caller does not own this resource                       |
+| `PET_NOT_FOUND`               | 404  |                                                         |
+| `PET_NOT_AVAILABLE`           | 400  | Pet is already adopted                                  |
+| `APPLICATION_NOT_FOUND`       | 404  |                                                         |
+| `ALREADY_APPLIED`             | 409  | One application per pet per adopter                     |
+| `CANNOT_APPLY_OWN_PET`        | 400  | Owner cannot apply to their own listing                 |
+| `APPLICATION_ALREADY_DECIDED` | 400  | Only `pending` applications can be accepted or rejected |
+| `IMAGE_LIMIT_REACHED`         | 400  | Maximum 8 images per pet                                |
+| `IMAGE_REQUIRED`              | 400  | A listing must keep at least 1 image                    |
+| `RATE_LIMITED`                | 429  | Too many requests                                       |
 
 ### 1.5 Pagination
 
@@ -113,10 +113,10 @@ Offset-based, uniform across all list endpoints:
 
 ### 1.6 Auth cookies
 
-| Cookie | Contents | Lifetime | Flags |
-|---|---|---|---|
-| `access_token` | JWT with `sub`, `email`, `is_verified`, `exp` | 15 minutes | `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/` |
-| `refresh_token` | Opaque random string (SHA-256 hash stored in `refresh_tokens`) | 7 days | `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/api/v1/auth` |
+| Cookie          | Contents                                                       | Lifetime   | Flags                                                     |
+| --------------- | -------------------------------------------------------------- | ---------- | --------------------------------------------------------- |
+| `access_token`  | JWT with `sub`, `email`, `is_verified`, `exp`                  | 15 minutes | `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`            |
+| `refresh_token` | Opaque random string (SHA-256 hash stored in `refresh_tokens`) | 7 days     | `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/api/v1/auth` |
 
 The refresh cookie is scoped to the auth path so it is never sent on ordinary requests. `SameSite=Lax` plus the fact that all state-changing endpoints are non-GET is the CSRF defense; no separate CSRF token in v1. Every browser request uses `credentials: "include"`.
 
@@ -126,14 +126,14 @@ The refresh cookie is scoped to the auth path so it is never sent on ordinary re
 
 Per IP, sliding window:
 
-| Scope | Limit |
-|---|---|
-| `POST /auth/login` | 10 / 15 min |
-| `POST /auth/register` | 5 / hour |
-| `POST /auth/forgot-password`, `/auth/resend-verification` | 3 / hour |
-| `POST /pets` | 10 / hour |
-| `POST /pets/{id}/applications` | 20 / day |
-| Everything else | 100 / minute |
+| Scope                                                     | Limit        |
+| --------------------------------------------------------- | ------------ |
+| `POST /auth/login`                                        | 10 / 15 min  |
+| `POST /auth/register`                                     | 5 / hour     |
+| `POST /auth/forgot-password`, `/auth/resend-verification` | 3 / hour     |
+| `POST /pets`                                              | 10 / hour    |
+| `POST /pets/{id}/applications`                            | 20 / day     |
+| Everything else                                           | 100 / minute |
 
 ---
 
@@ -230,17 +230,17 @@ Per IP, sliding window:
 
 ## 3. Authentication Endpoints
 
-| Method | Path | Auth | Purpose | FR |
-|---|---|---|---|---|
-| POST | `/auth/register` | public | Create an account, send verification email | FR-AUTH-1 |
-| POST | `/auth/login` | public | Authenticate, set cookies | FR-AUTH-4 |
-| POST | `/auth/refresh` | cookie | Rotate tokens | FR-AUTH-8 |
-| POST | `/auth/logout` | user | Clear cookies, revoke refresh token | FR-AUTH-6 |
-| POST | `/auth/verify-email` | public | Redeem a verification token | FR-AUTH-2 |
-| POST | `/auth/resend-verification` | public | Issue a new verification email | FR-AUTH-3 |
-| POST | `/auth/forgot-password` | public | Send a reset email | FR-AUTH-7 |
-| POST | `/auth/reset-password` | public | Set a new password with a reset token | FR-AUTH-7 |
-| GET | `/auth/me` | user | Current user, for session bootstrap | FR-AUTH-8 |
+| Method | Path                        | Auth   | Purpose                                    | FR        |
+| ------ | --------------------------- | ------ | ------------------------------------------ | --------- |
+| POST   | `/auth/register`            | public | Create an account, send verification email | FR-AUTH-1 |
+| POST   | `/auth/login`               | public | Authenticate, set cookies                  | FR-AUTH-4 |
+| POST   | `/auth/refresh`             | cookie | Rotate tokens                              | FR-AUTH-8 |
+| POST   | `/auth/logout`              | user   | Clear cookies, revoke refresh token        | FR-AUTH-6 |
+| POST   | `/auth/verify-email`        | public | Redeem a verification token                | FR-AUTH-2 |
+| POST   | `/auth/resend-verification` | public | Issue a new verification email             | FR-AUTH-3 |
+| POST   | `/auth/forgot-password`     | public | Send a reset email                         | FR-AUTH-7 |
+| POST   | `/auth/reset-password`      | public | Set a new password with a reset token      | FR-AUTH-7 |
+| GET    | `/auth/me`                  | user   | Current user, for session bootstrap        | FR-AUTH-8 |
 
 ### `POST /auth/register` → `201`
 
@@ -310,19 +310,24 @@ Returns `{ "user": {...UserPrivate...} }`. Called once on app load to hydrate au
 
 ## 4. Profile Endpoints
 
-| Method | Path | Auth | Purpose | FR |
-|---|---|---|---|---|
-| GET | `/users/me` | user | Own full profile | FR-PROF-2 |
-| PATCH | `/users/me` | user | Update own profile | FR-PROF-2 |
-| POST | `/users/me/avatar/signature` | user | Cloudinary signature for the avatar upload | FR-PROF-3 |
-| POST | `/users/me/avatar` | user | Persist the uploaded avatar | FR-PROF-3 |
-| GET | `/users/{id}` | public | Public profile | FR-PROF-4 |
-| GET | `/users/{id}/pets` | public | That user's available listings | FR-PROF-4 |
+| Method | Path                         | Auth   | Purpose                                    | FR        |
+| ------ | ---------------------------- | ------ | ------------------------------------------ | --------- |
+| GET    | `/users/me`                  | user   | Own full profile                           | FR-PROF-2 |
+| PATCH  | `/users/me`                  | user   | Update own profile                         | FR-PROF-2 |
+| POST   | `/users/me/avatar/signature` | user   | Cloudinary signature for the avatar upload | FR-PROF-3 |
+| POST   | `/users/me/avatar`           | user   | Persist the uploaded avatar                | FR-PROF-3 |
+| GET    | `/users/{id}`                | public | Public profile                             | FR-PROF-4 |
+| GET    | `/users/{id}/pets`           | public | That user's available listings             | FR-PROF-4 |
 
 ### `PATCH /users/me` → `200`
 
 ```json
-{ "full_name": "Priya S.", "city": "Pune", "phone": "+91...", "bio": "Dog person." }
+{
+  "full_name": "Priya S.",
+  "city": "Pune",
+  "phone": "+91...",
+  "bio": "Dog person."
+}
 ```
 
 All fields optional; only provided fields change. Email is not editable in v1 — including it returns `422`.
@@ -334,7 +339,10 @@ Returns `{ "timestamp", "signature", "api_key", "cloud_name", "folder": "adopt-a
 ### `POST /users/me/avatar` → `200`
 
 ```json
-{ "url": "https://res.cloudinary.com/...", "public_id": "adopt-a-pet/avatars/abc123" }
+{
+  "url": "https://res.cloudinary.com/...",
+  "public_id": "adopt-a-pet/avatars/abc123"
+}
 ```
 
 Stores both, and deletes the previous avatar from Cloudinary. Returns `UserPrivate`.
@@ -351,31 +359,31 @@ Paginated `PetCard` list, `status = available` only.
 
 ## 5. Pet Listing Endpoints
 
-| Method | Path | Auth | Purpose | FR |
-|---|---|---|---|---|
-| GET | `/pets` | public | Browse with filters, search, sort | FR-DISC-1,3–8 |
-| POST | `/pets` | verified | Create a listing | FR-PET-1 |
-| GET | `/pets/{id}` | public | Listing detail | FR-DISC-9 |
-| PATCH | `/pets/{id}` | owner | Edit a listing | FR-PET-3 |
-| DELETE | `/pets/{id}` | owner | Delete a listing | FR-PET-4 |
-| POST | `/pets/{id}/mark-adopted` | owner | Close the listing | FR-PET-7 |
-| GET | `/pets/mine` | user | The caller's own listings | FR-PET-6 |
+| Method | Path                      | Auth     | Purpose                           | FR            |
+| ------ | ------------------------- | -------- | --------------------------------- | ------------- |
+| GET    | `/pets`                   | public   | Browse with filters, search, sort | FR-DISC-1,3–8 |
+| POST   | `/pets`                   | verified | Create a listing                  | FR-PET-1      |
+| GET    | `/pets/{id}`              | public   | Listing detail                    | FR-DISC-9     |
+| PATCH  | `/pets/{id}`              | owner    | Edit a listing                    | FR-PET-3      |
+| DELETE | `/pets/{id}`              | owner    | Delete a listing                  | FR-PET-4      |
+| POST   | `/pets/{id}/mark-adopted` | owner    | Close the listing                 | FR-PET-7      |
+| GET    | `/pets/mine`              | user     | The caller's own listings         | FR-PET-6      |
 
 ### `GET /pets` → `200`
 
 Query parameters:
 
-| Param | Type | Default | Notes |
-|---|---|---|---|
-| `species` | enum | — | `dog` \| `cat` \| `bird` \| `rabbit` \| `other`. Repeatable for multi-select. |
-| `size` | enum | — | `small` \| `medium` \| `large`. Repeatable. |
-| `gender` | enum | — | `male` \| `female` \| `unknown` |
-| `city` | string | — | Case-insensitive exact match |
-| `age_band` | enum | — | `baby` (<12 mo) \| `young` (12–35) \| `adult` (36–95) \| `senior` (96+), mapped onto `pets.age_months` |
-| `q` | string | — | Full-text search over name, breed, description |
-| `sort` | enum | `newest` | `newest` \| `oldest` \| `youngest` |
-| `page` | int | 1 | |
-| `limit` | int | 12 | Max 50 |
+| Param      | Type   | Default  | Notes                                                                                                  |
+| ---------- | ------ | -------- | ------------------------------------------------------------------------------------------------------ |
+| `species`  | enum   | —        | `dog` \| `cat` \| `bird` \| `rabbit` \| `other`. Repeatable for multi-select.                          |
+| `size`     | enum   | —        | `small` \| `medium` \| `large`. Repeatable.                                                            |
+| `gender`   | enum   | —        | `male` \| `female` \| `unknown`                                                                        |
+| `city`     | string | —        | Case-insensitive exact match                                                                           |
+| `age_band` | enum   | —        | `baby` (<12 mo) \| `young` (12–35) \| `adult` (36–95) \| `senior` (96+), mapped onto `pets.age_months` |
+| `q`        | string | —        | Full-text search over name, breed, description                                                         |
+| `sort`     | enum   | `newest` | `newest` \| `oldest` \| `youngest`                                                                     |
+| `page`     | int    | 1        |                                                                                                        |
+| `limit`    | int    | 12       | Max 50                                                                                                 |
 
 Only `status = available` is ever returned. Filters combine with AND; repeated values within one filter combine with OR. Response: `{ "items": [PetCard], "pagination": {...} }`.
 
@@ -398,8 +406,16 @@ Only `status = available` is ever returned. Filters combine with AND; repeated v
   "is_neutered": true,
   "good_with_notes": "Great with children.",
   "images": [
-    { "url": "https://res.cloudinary.com/...", "public_id": "adopt-a-pet/pets/x1", "position": 0 },
-    { "url": "https://res.cloudinary.com/...", "public_id": "adopt-a-pet/pets/x2", "position": 1 }
+    {
+      "url": "https://res.cloudinary.com/...",
+      "public_id": "adopt-a-pet/pets/x1",
+      "position": 0
+    },
+    {
+      "url": "https://res.cloudinary.com/...",
+      "public_id": "adopt-a-pet/pets/x2",
+      "position": 1
+    }
   ]
 }
 ```
@@ -446,12 +462,12 @@ sequenceDiagram
     A-->>B: Image record
 ```
 
-| Method | Path | Auth | Purpose | FR |
-|---|---|---|---|---|
-| POST | `/pets/{id}/images/signature` | owner | Signed upload parameters | FR-PET-2 |
-| POST | `/pets/{id}/images` | owner | Persist an uploaded image | FR-PET-5 |
-| DELETE | `/pets/{id}/images/{image_id}` | owner | Remove an image | FR-PET-5 |
-| PATCH | `/pets/{id}/images/order` | owner | Reorder / set the cover | FR-PET-2 |
+| Method | Path                           | Auth  | Purpose                   | FR       |
+| ------ | ------------------------------ | ----- | ------------------------- | -------- |
+| POST   | `/pets/{id}/images/signature`  | owner | Signed upload parameters  | FR-PET-2 |
+| POST   | `/pets/{id}/images`            | owner | Persist an uploaded image | FR-PET-5 |
+| DELETE | `/pets/{id}/images/{image_id}` | owner | Remove an image           | FR-PET-5 |
+| PATCH  | `/pets/{id}/images/order`      | owner | Reorder / set the cover   | FR-PET-2 |
 
 `POST .../images` body: `{ "url", "public_id", "position" }` → `201`. Rejects with `400 IMAGE_LIMIT_REACHED` at 8 images.
 
@@ -465,11 +481,11 @@ sequenceDiagram
 
 ## 7. Favorites Endpoints
 
-| Method | Path | Auth | Purpose | FR |
-|---|---|---|---|---|
-| POST | `/pets/{id}/favorite` | user | Save a pet | FR-FAV-1 |
-| DELETE | `/pets/{id}/favorite` | user | Unsave a pet | FR-FAV-4 |
-| GET | `/users/me/favorites` | user | The saved list | FR-FAV-3 |
+| Method | Path                  | Auth | Purpose        | FR       |
+| ------ | --------------------- | ---- | -------------- | -------- |
+| POST   | `/pets/{id}/favorite` | user | Save a pet     | FR-FAV-1 |
+| DELETE | `/pets/{id}/favorite` | user | Unsave a pet   | FR-FAV-4 |
+| GET    | `/users/me/favorites` | user | The saved list | FR-FAV-3 |
 
 `POST` → `201 { "is_favorited": true }`, idempotent — favoriting twice returns `200` with the same body rather than erroring, backed by the unique constraint.
 `DELETE` → `204`, idempotent.
@@ -479,14 +495,14 @@ sequenceDiagram
 
 ## 8. Adoption Application Endpoints
 
-| Method | Path | Auth | Purpose | FR |
-|---|---|---|---|---|
-| POST | `/pets/{id}/applications` | verified | Submit an application | FR-APP-1 |
-| GET | `/pets/{id}/applications` | owner | Owner's inbox for one pet | FR-APP-5 |
-| GET | `/users/me/applications` | user | Adopter's submitted applications | FR-APP-4 |
-| GET | `/applications/{id}` | party | One application in full | FR-APP-9 |
-| POST | `/applications/{id}/accept` | owner | Accept and close the listing | FR-APP-6 |
-| POST | `/applications/{id}/reject` | owner | Decline one applicant | FR-APP-7 |
+| Method | Path                        | Auth     | Purpose                          | FR       |
+| ------ | --------------------------- | -------- | -------------------------------- | -------- |
+| POST   | `/pets/{id}/applications`   | verified | Submit an application            | FR-APP-1 |
+| GET    | `/pets/{id}/applications`   | owner    | Owner's inbox for one pet        | FR-APP-5 |
+| GET    | `/users/me/applications`    | user     | Adopter's submitted applications | FR-APP-4 |
+| GET    | `/applications/{id}`        | party    | One application in full          | FR-APP-9 |
+| POST   | `/applications/{id}/accept` | owner    | Accept and close the listing     | FR-APP-6 |
+| POST   | `/applications/{id}/reject` | owner    | Decline one applicant            | FR-APP-7 |
 
 `party` = the applicant or the pet's owner. Anyone else gets `404`, not `403` — a third party should not learn that the application exists.
 
@@ -530,12 +546,12 @@ No body. Sets this application `rejected` and `decided_at = now()`. The pet and 
 
 ## 9. Notification Endpoints
 
-| Method | Path | Auth | Purpose | FR |
-|---|---|---|---|---|
-| GET | `/notifications` | user | Paginated feed | FR-NOTIF-2 |
-| GET | `/notifications/unread-count` | user | Badge count | FR-NOTIF-2 |
-| POST | `/notifications/{id}/read` | user | Mark one read | FR-NOTIF-3 |
-| POST | `/notifications/read-all` | user | Mark all read | FR-NOTIF-3 |
+| Method | Path                          | Auth | Purpose        | FR         |
+| ------ | ----------------------------- | ---- | -------------- | ---------- |
+| GET    | `/notifications`              | user | Paginated feed | FR-NOTIF-2 |
+| GET    | `/notifications/unread-count` | user | Badge count    | FR-NOTIF-2 |
+| POST   | `/notifications/{id}/read`    | user | Mark one read  | FR-NOTIF-3 |
+| POST   | `/notifications/read-all`     | user | Mark all read  | FR-NOTIF-3 |
 
 `GET /notifications` returns items shaped `{ id, type, title, body, link, is_read, created_at }`, newest first, with optional `?unread_only=true`. The badge count is polled on route change rather than on a timer — good enough for v1, and no websocket infrastructure.
 
@@ -543,10 +559,10 @@ No body. Sets this application `rejected` and `decided_at = now()`. The pet and 
 
 ## 10. Meta Endpoints
 
-| Method | Path | Auth | Purpose |
-|---|---|---|---|
-| GET | `/health` | public | Liveness probe for Render |
-| GET | `/meta/filters` | public | Options for the filter controls |
+| Method | Path            | Auth   | Purpose                         |
+| ------ | --------------- | ------ | ------------------------------- |
+| GET    | `/health`       | public | Liveness probe for Render       |
+| GET    | `/meta/filters` | public | Options for the filter controls |
 
 `GET /health` → `{ "status": "ok", "database": "ok", "version": "1.0.0" }`.
 
@@ -558,13 +574,13 @@ No body. Sets this application `rejected` and `decided_at = now()`. The pet and 
     { "value": "dog", "label": "Dogs", "count": 34 },
     { "value": "cat", "label": "Cats", "count": 21 }
   ],
-  "sizes":   [{ "value": "small", "label": "Small" }, "..."],
+  "sizes": [{ "value": "small", "label": "Small" }, "..."],
   "genders": [{ "value": "male", "label": "Male" }, "..."],
-  "cities":  ["Bengaluru", "Delhi", "Mumbai", "Pune"],
+  "cities": ["Bengaluru", "Delhi", "Mumbai", "Pune"],
   "age_bands": [
-    { "value": "baby",   "label": "Under 1 year" },
-    { "value": "young",  "label": "1–3 years" },
-    { "value": "adult",  "label": "3–8 years" },
+    { "value": "baby", "label": "Under 1 year" },
+    { "value": "young", "label": "1–3 years" },
+    { "value": "adult", "label": "3–8 years" },
     { "value": "senior", "label": "8+ years" }
   ]
 }
@@ -576,28 +592,28 @@ Counts and cities are computed over `status = 'available'` and cached for 5 minu
 
 ## 11. Endpoint Summary
 
-| Group | Count | Paths |
-|---|---|---|
-| Auth | 9 | `/auth/*` |
-| Profile | 6 | `/users/me*`, `/users/{id}*` |
-| Pets | 7 | `/pets`, `/pets/{id}`, `/pets/mine`, `/pets/{id}/mark-adopted` |
-| Images | 4 | `/pets/{id}/images*` |
-| Favorites | 3 | `/pets/{id}/favorite`, `/users/me/favorites` |
-| Applications | 6 | `/pets/{id}/applications`, `/applications/{id}*`, `/users/me/applications` |
-| Notifications | 4 | `/notifications*` |
-| Meta | 2 | `/health`, `/meta/filters` |
-| **Total** | **41** | |
+| Group         | Count  | Paths                                                                      |
+| ------------- | ------ | -------------------------------------------------------------------------- |
+| Auth          | 9      | `/auth/*`                                                                  |
+| Profile       | 6      | `/users/me*`, `/users/{id}*`                                               |
+| Pets          | 7      | `/pets`, `/pets/{id}`, `/pets/mine`, `/pets/{id}/mark-adopted`             |
+| Images        | 4      | `/pets/{id}/images*`                                                       |
+| Favorites     | 3      | `/pets/{id}/favorite`, `/users/me/favorites`                               |
+| Applications  | 6      | `/pets/{id}/applications`, `/applications/{id}*`, `/users/me/applications` |
+| Notifications | 4      | `/notifications*`                                                          |
+| Meta          | 2      | `/health`, `/meta/filters`                                                 |
+| **Total**     | **41** |                                                                            |
 
 ---
 
 ## 12. Requirement Coverage
 
-| Epic | Requirements | Covered by |
-|---|---|---|
-| Auth | FR-AUTH-1 → 8 | §3 (all nine endpoints) |
-| Profile | FR-PROF-1 → 5 | §4, plus `UserContact` release in §8 |
-| Listings | FR-PET-1 → 7 | §5, §6 |
-| Discovery | FR-DISC-1 → 9 | `GET /pets`, `GET /pets/{id}`, `GET /meta/filters` |
-| Favorites | FR-FAV-1 → 5 | §7 |
-| Applications | FR-APP-1 → 9 | §8 |
-| Notifications | FR-NOTIF-1 → 4 | §9, plus email side effects noted per endpoint |
+| Epic          | Requirements   | Covered by                                         |
+| ------------- | -------------- | -------------------------------------------------- |
+| Auth          | FR-AUTH-1 → 8  | §3 (all nine endpoints)                            |
+| Profile       | FR-PROF-1 → 5  | §4, plus `UserContact` release in §8               |
+| Listings      | FR-PET-1 → 7   | §5, §6                                             |
+| Discovery     | FR-DISC-1 → 9  | `GET /pets`, `GET /pets/{id}`, `GET /meta/filters` |
+| Favorites     | FR-FAV-1 → 5   | §7                                                 |
+| Applications  | FR-APP-1 → 9   | §8                                                 |
+| Notifications | FR-NOTIF-1 → 4 | §9, plus email side effects noted per endpoint     |
